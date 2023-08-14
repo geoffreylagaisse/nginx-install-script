@@ -204,6 +204,9 @@ cd /app
 export NODE_ENV=development
 runcmd yarn install
 
+sed -i 's/^pid/# pid/' /usr/local/openresty/nginx/conf/nginx.conf
+sed -i 's/^user npm/user root/' /usr/local/openresty/nginx/conf/nginx.conf
+
 # Create NPM service
 log "Creating NPM service"
 cat << 'EOF' > /etc/init.d/npm
