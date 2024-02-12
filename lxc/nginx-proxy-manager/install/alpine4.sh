@@ -19,7 +19,7 @@ log() {
   clear && printf "\033c\e[3J$logs\n\e[34m[info] $*\e[0m\n" | tee $TEMPLOG;
 }
 runcmd() {
-  LASTCMD=$(grep -n "$*" "$0" | sed "s/[[:blank:]]*runcmd//");
+  LASTCMD=$(grep -n "$*" "$0" | sed "s/[[:blank:]]*RUN//");
   if [[ "$#" -eq 1 ]]; then
     eval "$@" 2>$TEMPERR;
   else
@@ -66,24 +66,24 @@ fi
 
 # Install dependancies
 log "Installing dependencies"
-runcmd 'apk add python3 openresty nodejs yarn openssl apache2-utils logrotate $DEVDEPS'
+RUN 'apk add python3 openresty nodejs yarn openssl apache2-utils logrotate $DEVDEPS'
 
 # Setup python env and PIP
 log "Setting up python"
 python3 -m venv /opt/certbot/
-runcmd python3 -m ensurepip --upgrade
+RUN python3 -m ensurepip --upgrade
 # Install certbot and python dependancies
-runcmd pip3 install --no-cache-dir -U cryptography==3.3.2
-runcmd pip3 install --no-cache-dir cffi certbot
+RUN pip3 install --no-cache-dir -U cryptography==3.3.2
+RUN pip3 install --no-cache-dir cffi certbot
 
 log "Checking for latest NPM release"
 # Get latest version information for nginx-proxy-manager
-runcmd 'wget $WGETOPT -O ./_latest_release $NPMURL/releases/latest'
+RUN 'wget $WGETOPT -O ./_latest_release $NPMURL/releases/latest'
 _latest_version=$(basename $(cat ./_latest_release | grep -wo "expanded_assets/v.*\d") | cut -d'v' -f2)
 
 # Download nginx-proxy-manager source
 log "Downloading NPM v$_latest_version"
-runcmd 'wget $WGETOPT -c $NPMURL/archive/v$_latest_version.tar.gz -O - | tar -xz'
+RUN 'wget $WGETOPT -c $NPMURL/archive/v$_latest_version.tar.gz -O - | tar -xz'
 cd ./nginx-proxy-manager-$_latest_version
 
 log "Setting up enviroment"
@@ -142,7 +142,7 @@ echo resolver "$(awk 'BEGIN{ORS=" "} $1=="nameserver" {print ($2 ~ ":")? "["$2"]
 # Generate dummy self-signed certificate.
 if [ ! -f /data/nginx/dummycert.pem ] || [ ! -f /data/nginx/dummykey.pem ]; then
   log "Generating dummy SSL certificate"
-  runcmd 'openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj "/O=Nginx Proxy Manager/OU=Dummy Certificate/CN=localhost" -keyout /data/nginx/dummykey.pem -out /data/nginx/dummycert.pem'
+  RUN 'openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj "/O=Nginx Proxy Manager/OU=Dummy Certificate/CN=localhost" -keyout /data/nginx/dummykey.pem -out /data/nginx/dummycert.pem'
 fi
 
 # Copy app files
@@ -154,8 +154,8 @@ cp -r global/* /app/global
 log "Building frontend"
 cd ./frontend
 export NODE_ENV=development
-runcmd yarn install
-runcmd yarn build
+RUN yarn install
+RUN yarn build
 cp -r dist/* /app/frontend
 cp -r app-images/* /app/frontend/images
 
@@ -179,7 +179,7 @@ EOF
 fi
 cd /app
 export NODE_ENV=development
-runcmd yarn install
+RUN yarn install
 
 sed -i 's/^pid/# pid/' /usr/local/openresty/nginx/conf/nginx.conf
 sed -i 's/^user npm/user root/' /usr/local/openresty/nginx/conf/nginx.conf
@@ -227,8 +227,8 @@ rc-service openresty stop &>/dev/null
 
 # Start services
 log "Starting services"
-runcmd rc-service openresty start
-runcmd rc-service npm start
+RUN rc-service openresty start
+RUN rc-service npm start
 
 IP=$(ip a s dev eth0 | sed -n '/inet / s/\// /p' | awk '{print $2}')
 log "Installation complete
