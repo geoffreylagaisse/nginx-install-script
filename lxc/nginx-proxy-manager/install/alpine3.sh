@@ -64,23 +64,6 @@ if [ -f /etc/init.d/npm ]; then
   apk del certbot $DEVDEPS &>/dev/null
 fi
 
-log "Checking for latest openresty repository"
-. /etc/os-release
-_alpine_version=${VERSION_ID%.*}
-# add openresty public key
-if [ ! -f /etc/apk/keys/admin@openresty.com-5ea678a6.rsa.pub ]; then
-  runcmd 'wget $WGETOPT -P /etc/apk/keys/ http://openresty.org/package/admin@openresty.com-5ea678a6.rsa.pub'
-fi
-
-# Get the latest openresty repository
-_repository_version=$(wget $WGETOPT "http://openresty.org/package/alpine/" -O - | grep -Eo "[0-9]{1}\.[0-9]{1,2}" | sort -uVr | head -n1)
-_repository_version=$(printf "$_repository_version\n$_alpine_version" | sort -V | head -n1)
-_repository="http://openresty.org/package/alpine/v$_repository_version/main"
-
-# Update/Insert openresty repository
-grep -q 'openresty.org' /etc/apk/repositories &&
-  sed -i "/openresty.org/c\\$_repository/" /etc/apk/repositories || echo $_repository >> /etc/apk/repositories
-
 # Install dependancies
 log "Installing dependencies"
 runcmd 'apk add python3 openresty nodejs yarn openssl apache2-utils logrotate $DEVDEPS'
