@@ -81,12 +81,6 @@ _repository="http://openresty.org/package/alpine/v$_repository_version/main"
 grep -q 'openresty.org' /etc/apk/repositories &&
   sed -i "/openresty.org/c\\$_repository/" /etc/apk/repositories || echo $_repository >> /etc/apk/repositories
 
-# Update container OS
-log "Updating container OS"
-
-runcmd apk update
-runcmd apk upgrade
-
 # Install dependancies
 log "Installing dependencies"
 runcmd 'apk add python3 openresty nodejs yarn openssl apache2-utils logrotate $DEVDEPS'
