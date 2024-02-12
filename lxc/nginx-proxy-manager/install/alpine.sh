@@ -83,7 +83,7 @@ grep -q 'openresty.org' /etc/apk/repositories &&
 
 # Update container OS
 log "Updating container OS"
-echo "fs.file-max = 65535" > /etc/sysctl.conf
+
 runcmd apk update
 runcmd apk upgrade
 
